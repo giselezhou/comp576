@@ -1,6 +1,7 @@
-__author__ = 'tan_nguyen'
+
 import numpy as np
 from sklearn import datasets, linear_model
+from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 
 def generate_data():
@@ -11,6 +12,7 @@ def generate_data():
     np.random.seed(0)
     X, y = datasets.make_moons(200, noise=0.20)
     return X, y
+
 
 def plot_decision_boundary(pred_func, X, y):
     '''
@@ -33,6 +35,7 @@ def plot_decision_boundary(pred_func, X, y):
     plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral)
     plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Spectral)
     plt.show()
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -66,6 +69,7 @@ class NeuralNetwork(object):
         self.W2 = np.random.randn(self.nn_hidden_dim, self.nn_output_dim) / np.sqrt(self.nn_hidden_dim)
         self.b2 = np.zeros((1, self.nn_output_dim))
 
+
     def actFun(self, z, type):
         '''
         actFun computes the activation functions
@@ -75,8 +79,18 @@ class NeuralNetwork(object):
         '''
 
         # YOU IMPLMENT YOUR actFun HERE
+        if type == 'tanh':
+            res = np.tanh(z)
+            return res
+        elif type == 'sigmoid':
+            res = 1.0 / (1.0 + np.exp(-z))
+            return res
+        elif type == 'relu':
+            return np.where(z > 0, z, 0)
+        else:
+            print("Activation: Your type" + type + " is not included!\n")
+            return None
 
-        return None
 
     def diff_actFun(self, z, type):
         '''
@@ -87,8 +101,17 @@ class NeuralNetwork(object):
         '''
 
         # YOU IMPLEMENT YOUR diff_actFun HERE
-
-        return None
+        if type == 'tanh':
+            res = 1.0 - np.tanh(z) ** 2
+            return res
+        elif type == 'sigmoid':
+            res = NeuralNetwork.actFun(z, type) * (1 - NeuralNetwork.actFun(z, type))
+            return res
+        elif type == 'relu':
+            return np.where(z > 0, 1, 0)
+        else:
+            print("Derivation: Your type" + type + " is not included!")
+            return None
 
     def feedforward(self, X, actFun):
         '''
@@ -101,9 +124,9 @@ class NeuralNetwork(object):
 
         # YOU IMPLEMENT YOUR feedforward HERE
 
-        # self.z1 =
-        # self.a1 =
-        # self.z2 =
+        self.z1 = X.dot(self.W1) + self.b1
+        self.a1 = actFun(self.z1)
+        self.z2 = self.a1.dot(self.W2) + self.b2
         exp_scores = np.exp(self.z2)
         self.probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
         return None
@@ -121,7 +144,8 @@ class NeuralNetwork(object):
 
         # YOU IMPLEMENT YOUR CALCULATION OF THE LOSS HERE
 
-        # data_loss =
+        v = OneHotEncoder(n_values=2, sparse=False).fit_transform(np.reshape(y, (-1, 1)))
+        data_loss = -1 * np.sum(np.log(self.probs) * v)
 
         # Add regulatization term to loss (optional)
         data_loss += self.reg_lambda / 2 * (np.sum(np.square(self.W1)) + np.sum(np.square(self.W2)))
@@ -148,10 +172,13 @@ class NeuralNetwork(object):
         num_examples = len(X)
         delta3 = self.probs
         delta3[range(num_examples), y] -= 1
-        # dW2 = dL/dW2
-        # db2 = dL/db2
-        # dW1 = dL/dW1
-        # db1 = dL/db1
+        delta2 = delta3.dot(self.W2.T) * self.diff_actFun(self.a1, self.actFun_type)
+
+        dW2 = 1. / num_examples * self.a1.T.dot(delta3)
+        db2 = 1. / num_examples * np.sum(delta3, axis=0)
+
+        dW1 = 1. / num_examples * X.T.dot(delta2)
+        db1 = 1. / num_examples * np.sum(delta2, axis=0)
         return dW1, dW2, db1, db2
 
     def fit_model(self, X, y, epsilon=0.01, num_passes=20000, print_loss=True):
@@ -194,15 +221,15 @@ class NeuralNetwork(object):
         '''
         plot_decision_boundary(lambda x: self.predict(x), X, y)
 
+
 def main():
     # # generate and visualize Make-Moons dataset
-    # X, y = generate_data()
-    # plt.scatter(X[:, 0], X[:, 1], s=40, c=y, cmap=plt.cm.Spectral)
-    # plt.show()
+    X, y = generate_data()
+    model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=40, nn_output_dim=2, actFun_type='tanh')
 
-    # model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=3 , nn_output_dim=2, actFun_type='tanh')
-    # model.fit_model(X,y)
-    # model.visualize_decision_boundary(X,y)
+    model.fit_model(X, y)
+    model.visualize_decision_boundary(X, y)
+
 
 if __name__ == "__main__":
     main()
