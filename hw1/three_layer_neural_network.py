@@ -123,11 +123,11 @@ class NeuralNetwork(object):
         '''
 
         # YOU IMPLEMENT YOUR feedforward HERE
-
-        self.z1 = X.dot(self.W1) + self.b1
-        self.a1 = actFun(self.z1)
-        self.z2 = self.a1.dot(self.W2) + self.b2
-        exp_scores = np.exp(self.z2)
+        self.a1 = X
+        self.z2 = self.a1.dot(self.W1) + self.b1
+        self.a2 = actFun(self.z2)
+        self.z3 = self.a2.dot(self.W2) + self.b2
+        exp_scores = np.exp(self.z3)
         self.probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
         return None
 
@@ -172,12 +172,12 @@ class NeuralNetwork(object):
         num_examples = len(X)
         delta3 = self.probs
         delta3[range(num_examples), y] -= 1
-        delta2 = delta3.dot(self.W2.T) * self.diff_actFun(self.a1, self.actFun_type)
+        delta2 = delta3.dot(self.W2.T) * self.diff_actFun(self.z2, self.actFun_type)
 
-        dW2 = 1. / num_examples * self.a1.T.dot(delta3)
+        dW2 = 1. / num_examples * self.a2.T.dot(delta3)
         db2 = 1. / num_examples * np.sum(delta3, axis=0)
 
-        dW1 = 1. / num_examples * X.T.dot(delta2)
+        dW1 = 1. / num_examples * self.a1.T.dot(delta2)
         db1 = 1. / num_examples * np.sum(delta2, axis=0)
         return dW1, dW2, db1, db2
 
