@@ -4,6 +4,7 @@ from sklearn import datasets, linear_model
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 
+
 def generate_data():
     '''
     generate data
@@ -69,8 +70,8 @@ class NeuralNetwork(object):
         self.W2 = np.random.randn(self.nn_hidden_dim, self.nn_output_dim) / np.sqrt(self.nn_hidden_dim)
         self.b2 = np.zeros((1, self.nn_output_dim))
 
-
-    def actFun(self, z, type):
+    @staticmethod
+    def actFun(z, type):
         '''
         actFun computes the activation functions
         :param z: net input
@@ -91,8 +92,8 @@ class NeuralNetwork(object):
             print("Activation: Your type" + type + " is not included!\n")
             return None
 
-
-    def diff_actFun(self, z, type):
+    @staticmethod
+    def diff_actFun(z, type):
         '''
         diff_actFun computes the derivatives of the activation functions wrt the net input
         :param z: net input
@@ -225,7 +226,7 @@ class NeuralNetwork(object):
 def main():
     # # generate and visualize Make-Moons dataset
     X, y = generate_data()
-    model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=40, nn_output_dim=2, actFun_type='tanh')
+    model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=3, nn_output_dim=2, actFun_type='tanh')
 
     model.fit_model(X, y)
     model.visualize_decision_boundary(X, y)
