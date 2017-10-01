@@ -1,7 +1,21 @@
-from three_layer_neural_network import NeuralNetwork, generate_data, plot_decision_boundary
+from three_layer_neural_network import NeuralNetwork, plot_decision_boundary
 import numpy as np
 from sklearn import datasets, linear_model
 from sklearn.preprocessing import OneHotEncoder
+
+
+def generate_data(type=None):
+    '''
+    generate data
+    :return: X: input data, y: given labels
+    '''
+    np.random.seed(0)
+    if type == 'make_moons':
+        X, y = datasets.make_moons(200, noise=0.20)
+    else:
+        X, y = datasets.make_circles(200, noise=0.20)
+    return X, y
+
 
 
 class Layer(object):
@@ -38,7 +52,7 @@ class Layer(object):
 
 class DeepNeuralNetwork(object):
 
-    def __init__(self, nn_num_layer, nn_layer_sizes, actFun_type='tanh', reg_lambda=0.01, seed=0):
+    def __init__(self, nn_layer_sizes, actFun_type='tanh', reg_lambda=0.01, seed=0):
         '''
         :param nn_num_layer: number of layers of neural network (input and output inclusive)
         :param nn_layer_sizes: dimension of each layer from input to hidden, to output
@@ -46,15 +60,15 @@ class DeepNeuralNetwork(object):
         :param reg_lambda: regularization coefficient
         :param seed: random seed
         '''
-        self.nn_num_layer = nn_num_layer
-        self.nn_layer_sizes = nn_layer_sizes[:nn_num_layer]
+        self.nn_layer_sizes = nn_layer_sizes
+        self.nn_num_layer = len(nn_layer_sizes)
         self.actFun_type = actFun_type
         self.reg_lambda = reg_lambda
         self.layers = []
         np.random.seed(seed)
 
         # initialize the layers in the network
-        for i in range(nn_num_layer - 1):
+        for i in range(self.nn_num_layer - 1):
             layer = Layer(nn_layer_sizes[i], nn_layer_sizes[i+1], self.actFun_type)
             self.layers.append(layer)
 
@@ -78,8 +92,7 @@ class DeepNeuralNetwork(object):
         out = self.feedforward(X)
         _, num_features = out.shape
         # Calculating the loss
-
-        v = OneHotEncoder(n_values=num_features, sparse=False).fit_transform(np.reshape(y, (-1, 1)))
+        v = OneHotEncoder(n_values=num_features, sparse=False).fit_transform(y.reshape(-1, 1))
         data_loss = -1 * np.sum(np.log(out) * v)
 
         # Add regulationzation term to loss (optional)
@@ -92,7 +105,7 @@ class DeepNeuralNetwork(object):
     def backprop(self, X, y):
         num = len(X)
         last_delta = self.probs
-        last_delta[range(num), y] -= 1
+        last_delta[range(num), y] -= 1.0
         for i in range(len(self.layers) - 1, -1, -1):
             last_delta = self.layers[i].backprop(last_delta, num)
 
@@ -147,7 +160,9 @@ class DeepNeuralNetwork(object):
 def main():
     # # generate and visualize Make-Moons dataset
     X, y = generate_data()
-    model = DeepNeuralNetwork(nn_num_layer=3, nn_layer_sizes=[2, 10, 5, 10, 2], actFun_type='tanh')
+    num_samples, dim = X.shape
+
+    model = DeepNeuralNetwork(nn_layer_sizes=[dim, 10, 5, 10, dim], actFun_type='tanh')
 
     model.fit_model(X, y)
     model.visualize_decision_boundary(X, y)

@@ -11,7 +11,8 @@ def generate_data():
     :return: X: input data, y: given labels
     '''
     np.random.seed(0)
-    X, y = datasets.make_moons(200, noise=0.20)
+    #X, y = datasets.make_moons(200, noise=0.20)
+    X, y = datasets.make_swiss_roll(200, noise=0.20)
     return X, y
 
 
@@ -226,10 +227,13 @@ class NeuralNetwork(object):
 def main():
     # # generate and visualize Make-Moons dataset
     X, y = generate_data()
-    model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=3, nn_output_dim=2, actFun_type='tanh')
+    print(X.shape)
+    plt.scatter(X[:, 0], X[:, 1], s=40, c=y, cmap=plt.cm.Spectral)
+    plt.show()
+    # model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=3, nn_output_dim=2, actFun_type='tanh')
 
-    model.fit_model(X, y)
-    model.visualize_decision_boundary(X, y)
+    # model.fit_model(X, y)
+    # model.visualize_decision_boundary(X, y)
 
 
 if __name__ == "__main__":
