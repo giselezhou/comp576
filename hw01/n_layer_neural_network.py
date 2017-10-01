@@ -1,2 +1,0 @@
-import numpy as np
-from three_layer_neural_network import NeuralNetwork
